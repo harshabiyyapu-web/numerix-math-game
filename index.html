@@ -268,7 +268,7 @@
       }
     }
 
-    // Airtable Integration - Fixed Configuration
+    // Airtable Integration - With Detailed Error Reporting
     async function saveUserToAirtable(name, email) {
       const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
       const AIRTABLE_TABLE = 'D1'; // Fixed: uppercase D1
@@ -285,9 +285,15 @@
         }]
       };
 
-      console.log('💾 Saving to Airtable:', { name, email });
+      console.log('🚀 AIRTABLE DEBUG START');
+      console.log('📝 Data to save:', { name, email });
+      console.log('🔗 Full URL:', url);
+      console.log('📦 Request payload:', JSON.stringify(data, null, 2));
+      console.log('🔑 Using token ending in:', AIRTABLE_TOKEN.slice(-10));
 
       try {
+        console.log('⏳ Making fetch request...');
+        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -297,17 +303,27 @@
           body: JSON.stringify(data)
         });
 
+        console.log('📡 Response received');
+        console.log('📊 Status:', response.status);
+        console.log('📊 Status Text:', response.statusText);
+        console.log('📊 Headers:', Object.fromEntries(response.headers.entries()));
+
+        const responseText = await response.text();
+        console.log('📄 Raw response:', responseText);
+
         if (response.ok) {
-          const responseData = await response.json();
-          console.log('✅ Successfully saved to Airtable:', responseData);
+          console.log('✅ SUCCESS: Data saved successfully');
+          alert(`✅ SUCCESS!\nData saved to Airtable D1 table\nName: ${name}\nEmail: ${email}`);
           return true;
         } else {
-          const errorData = await response.text();
-          console.error('❌ Airtable save failed:', response.status, errorData);
+          console.error('❌ FAILED: HTTP Error');
+          let errorMessage = `Status: ${response.status} ${response.statusText}\nResponse: ${responseText}`;
+          alert(`❌ SAVE FAILED!\n${errorMessage}`);
           return false;
         }
       } catch (error) {
-        console.error('💥 Airtable error:', error);
+        console.error('💥 EXCEPTION:', error);
+        alert(`💥 EXCEPTION OCCURRED!\nError: ${error.message}\nType: ${error.name}`);
         return false;
       }
     }
