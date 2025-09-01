@@ -135,16 +135,34 @@
       startMusic(); // Start music on first user interaction
     }
 
-    function chooseDifficulty(){
+    async function chooseDifficulty(){
       username = document.getElementById("username").value;
       email = document.getElementById("email").value;
       if(!username || !email){ alert("Please enter name and email!"); return; }
       
-      // Save to Airtable
-      saveUserToAirtable(username, email);
+      // Show saving message
+      const nextBtn = document.querySelector('#intro button');
+      nextBtn.innerHTML = "Saving...";
+      nextBtn.disabled = true;
       
-      document.getElementById("intro").classList.remove("active");
-      document.getElementById("difficulty").classList.add("active");
+      // Save to Airtable
+      const success = await saveUserToAirtable(username, email);
+      
+      // Show result
+      if (success) {
+        nextBtn.innerHTML = "Saved! ✅";
+        setTimeout(() => {
+          document.getElementById("intro").classList.remove("active");
+          document.getElementById("difficulty").classList.add("active");
+        }, 1000);
+      } else {
+        nextBtn.innerHTML = "Save Failed ❌ - Continue anyway";
+        nextBtn.disabled = false;
+        setTimeout(() => {
+          document.getElementById("intro").classList.remove("active");
+          document.getElementById("difficulty").classList.add("active");
+        }, 2000);
+      }
     }
 
     function setDifficulty(diff){ difficulty = diff; }
@@ -250,7 +268,7 @@
       }
     }
 
-    // Airtable Integration
+    // Airtable Integration with Debug Logs
     async function saveUserToAirtable(name, email) {
       const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
       const AIRTABLE_TABLE = 'd1';
@@ -267,7 +285,14 @@
         }]
       };
 
+      console.log('🚀 AIRTABLE DEBUG: Starting save process');
+      console.log('📝 Data to save:', { name, email });
+      console.log('🔗 URL:', url);
+      console.log('📦 Payload:', JSON.stringify(data, null, 2));
+
       try {
+        console.log('⏳ Making API request...');
+        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -277,13 +302,27 @@
           body: JSON.stringify(data)
         });
 
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response status text:', response.statusText);
+
+        const responseData = await response.text();
+        console.log('📄 Response body:', responseData);
+
         if (response.ok) {
-          console.log('User data saved to Airtable successfully');
+          console.log('✅ SUCCESS: User data saved to Airtable successfully');
+          alert(`✅ DEBUG: Data saved successfully!\nName: ${name}\nEmail: ${email}`);
+          return true;
         } else {
-          console.error('Failed to save to Airtable:', response.status, response.statusText);
+          console.error('❌ FAILED: Save to Airtable failed');
+          console.error('Status:', response.status);
+          console.error('Response:', responseData);
+          alert(`❌ DEBUG: Save failed!\nStatus: ${response.status}\nError: ${responseData}`);
+          return false;
         }
       } catch (error) {
-        console.error('Error saving to Airtable:', error);
+        console.error('💥 ERROR: Exception during save:', error);
+        alert(`💥 DEBUG: Exception occurred!\nError: ${error.message}`);
+        return false;
       }
     }
 
