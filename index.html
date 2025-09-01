@@ -118,20 +118,116 @@
     let leaderboard = [];
     let bgMusic;
 
-    // Generate Questions
+    // Generate Questions with Proper Difficulty Levels
     function generateQuestions(diff, n) {
       let set = [];
+      
       for (let i = 0; i < n; i++) {
-        let a = Math.floor(Math.random() * 10 + 1);
-        let b = Math.floor(Math.random() * 10 + 1);
-        if (diff === "medium") { a += 5; b += 5; }
-        if (diff === "hard") { a += 10; b += 10; }
-        let type = i % 3;
-        if (type === 0) set.push({ q: `${a} + ${b} = ?`, a: (a+b).toString() });
-        if (type === 1) set.push({ q: `${a} - ${b} = ?`, a: (a-b).toString() });
-        if (type === 2) set.push({ q: `${a} × ${b} = ?`, a: (a*b).toString() });
+        let question = {};
+        
+        if (diff === "easy") {
+          question = generateEasyQuestion();
+        } else if (diff === "medium") {
+          question = generateMediumQuestion();
+        } else if (diff === "hard") {
+          question = generateHardQuestion();
+        }
+        
+        set.push(question);
       }
       return set;
+    }
+    
+    // Easy Questions: Single digit addition, subtraction, simple multiplication
+    function generateEasyQuestion() {
+      const types = ['add', 'sub', 'mul'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'add') {
+        let a = Math.floor(Math.random() * 9) + 1; // 1-9
+        let b = Math.floor(Math.random() * 9) + 1; // 1-9
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'sub') {
+        let a = Math.floor(Math.random() * 10) + 5; // 5-14
+        let b = Math.floor(Math.random() * 5) + 1;  // 1-5
+        return { q: `${a} - ${b} = ?`, a: (a - b).toString() };
+      } else { // multiplication
+        let a = Math.floor(Math.random() * 5) + 2; // 2-6
+        let b = Math.floor(Math.random() * 5) + 2; // 2-6
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      }
+    }
+    
+    // Medium Questions: Two digit numbers, division, mixed operations
+    function generateMediumQuestion() {
+      const types = ['add', 'sub', 'mul', 'div', 'mixed'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'add') {
+        let a = Math.floor(Math.random() * 50) + 10; // 10-59
+        let b = Math.floor(Math.random() * 30) + 10; // 10-39
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'sub') {
+        let a = Math.floor(Math.random() * 50) + 25; // 25-74
+        let b = Math.floor(Math.random() * 20) + 5;  // 5-24
+        return { q: `${a} - ${b} = ?`, a: (a - b).toString() };
+      } else if (type === 'mul') {
+        let a = Math.floor(Math.random() * 8) + 7;  // 7-14
+        let b = Math.floor(Math.random() * 8) + 3;  // 3-10
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      } else if (type === 'div') {
+        let b = Math.floor(Math.random() * 8) + 3;  // 3-10
+        let result = Math.floor(Math.random() * 12) + 4; // 4-15
+        let a = b * result;
+        return { q: `${a} ÷ ${b} = ?`, a: result.toString() };
+      } else { // mixed operations
+        let a = Math.floor(Math.random() * 10) + 5;  // 5-14
+        let b = Math.floor(Math.random() * 5) + 2;   // 2-6
+        let c = Math.floor(Math.random() * 5) + 1;   // 1-5
+        let result = a + (b * c);
+        return { q: `${a} + ${b} × ${c} = ?`, a: result.toString() };
+      }
+    }
+    
+    // Hard Questions: Large numbers, complex operations, fractions, percentages
+    function generateHardQuestion() {
+      const types = ['large_add', 'large_mul', 'fraction', 'percentage', 'complex', 'square'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'large_add') {
+        let a = Math.floor(Math.random() * 500) + 100; // 100-599
+        let b = Math.floor(Math.random() * 300) + 50;  // 50-349
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'large_mul') {
+        let a = Math.floor(Math.random() * 20) + 15; // 15-34
+        let b = Math.floor(Math.random() * 15) + 12; // 12-26
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      } else if (type === 'fraction') {
+        let whole = Math.floor(Math.random() * 8) + 2;  // 2-9
+        let num = Math.floor(Math.random() * 4) + 1;    // 1-4
+        let den = Math.floor(Math.random() * 4) + 2;    // 2-5
+        let result = (whole * den + num) / den;
+        if (result % 1 === 0) {
+          return { q: `${whole} + ${num}/${den} = ?`, a: Math.floor(result).toString() };
+        } else {
+          return generateHardQuestion(); // Retry if not whole number
+        }
+      } else if (type === 'percentage') {
+        let percent = [10, 20, 25, 50, 75][Math.floor(Math.random() * 5)];
+        let number = Math.floor(Math.random() * 80) + 20; // 20-99
+        let result = Math.floor((number * percent) / 100);
+        return { q: `${percent}% of ${number} = ?`, a: result.toString() };
+      } else if (type === 'complex') {
+        let a = Math.floor(Math.random() * 15) + 10; // 10-24
+        let b = Math.floor(Math.random() * 8) + 3;   // 3-10
+        let c = Math.floor(Math.random() * 6) + 2;   // 2-7
+        let result = (a * b) - c;
+        return { q: `${a} × ${b} - ${c} = ?`, a: result.toString() };
+      } else { // square
+        let base = Math.floor(Math.random() * 8) + 3; // 3-10
+        let result = base * base;
+        return { q: `${base}² = ?`, a: result.toString() };
+      }
     }
 
     function goToIntro(){
