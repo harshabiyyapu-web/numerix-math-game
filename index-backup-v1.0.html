@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Numerix</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Arial Black', sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, orange, red, blue, pink, yellow);
+      background-size: 500% 500%;
+      animation: gradient 15s ease infinite;
+      color: white;
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .screen { display: none; padding: 40px; }
+    .active { display: block; }
+    h1 { font-size: 3rem; text-shadow: 2px 2px 8px black; }
+    input, button, select {
+      padding: 10px 20px; margin: 10px;
+      font-size: 1.2rem; border-radius: 10px; border: none;
+    }
+    button { background: #ffcc00; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px #fff; }
+    .difficulty-btn { margin: 15px; padding: 15px 25px; font-size: 1.3rem; }
+    .difficulty-btn.selected { background: #ff6600; color: white; box-shadow: 0 0 15px #ff6600; }
+    .question { font-size: 2rem; margin: 20px; }
+    #feedback { font-size: 1.5rem; margin: 10px; }
+
+    #topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 20px; font-size: 1.2rem;
+    }
+    #leaderboard {
+      margin-top: 20px; text-align: left; max-width: 400px; margin-inline:auto;
+      background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
+    }
+    #leaderboard h2 { text-align: center; }
+    .lb-item { margin: 5px 0; }
+    #unlock { font-size: 2rem; color: yellow; margin: 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div id="logo" class="screen active">
+    <h1 style="font-size:5rem; color:#ffcc00; text-shadow:0 0 30px white;">NUMERIX</h1>
+    <p>⚡ Master the Numbers ⚡</p>
+    <button onclick="goToIntro()">Continue</button>
+  </div>
+
+  <!-- Username + Email -->
+  <div id="intro" class="screen">
+    <h1>Enter the Arena</h1>
+    <input type="text" id="username" placeholder="Enter your name"><br>
+    <input type="email" id="email" placeholder="Enter your email"><br>
+    <button onclick="chooseDifficulty()">Next</button>
+  </div>
+
+  <!-- Difficulty -->
+  <div id="difficulty" class="screen">
+    <h1>Select Difficulty</h1>
+    <div id="difficulty-buttons">
+      <button class="difficulty-btn selected" onclick="setDifficulty('easy')" data-diff="easy">Easy</button>
+      <button class="difficulty-btn" onclick="setDifficulty('medium')" data-diff="medium">Medium</button>
+      <button class="difficulty-btn" onclick="setDifficulty('hard')" data-diff="hard">Hard</button>
+    </div>
+    <br>
+    <label for="qcount">Questions: </label>
+    <select id="qcount-select">
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+    </select><br>
+    <button onclick="startGame()" style="margin-top: 20px; font-size: 1.4rem; padding: 15px 30px;">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game" class="screen">
+    <div id="topbar">
+      <div id="timer"></div>
+      <div id="scoreboard"></div>
+      <div id="qcount"></div>
+    </div>
+    <h1 id="level-title">Level 1</h1>
+    <div id="question" class="question"></div>
+    <input type="text" id="answer" placeholder="Your answer">
+    <div id="feedback"></div>
+  </div>
+
+  <!-- Level Complete -->
+  <div id="complete" class="screen">
+    <h1 id="complete-title"></h1>
+    <p id="rank"></p>
+    <div id="unlock"></div>
+    <button onclick="nextLevel()">Next Level</button>
+    <button onclick="shareScore()">Share on WhatsApp</button>
+    <div id="leaderboard">
+      <h2>🏆 Leaderboard</h2>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <!-- Victory -->
+  <div id="victory" class="screen">
+    <h1>🎉 You conquered Numerix! 🎉</h1>
+    <button onclick="shareScore()">Share Final Score</button>
+  </div>
+
+  <script>
+    let currentLevel = 1, score = 0, questionIndex = 0;
+    let startTime, timerInterval, questions = {}, difficulty = "easy", numQuestions = 10;
+    let username = "", email = "";
+    let leaderboard = [];
+    let bgMusic;
+
+    // Generate Questions with Proper Difficulty Levels
+    function generateQuestions(diff, n) {
+      let set = [];
+      
+      for (let i = 0; i < n; i++) {
+        let question = {};
+        
+        if (diff === "easy") {
+          question = generateEasyQuestion();
+        } else if (diff === "medium") {
+          question = generateMediumQuestion();
+        } else if (diff === "hard") {
+          question = generateHardQuestion();
+        }
+        
+        set.push(question);
+      }
+      return set;
+    }
+    
+    // Easy Questions: Single digit addition, subtraction, simple multiplication
+    function generateEasyQuestion() {
+      const types = ['add', 'sub', 'mul'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'add') {
+        let a = Math.floor(Math.random() * 9) + 1; // 1-9
+        let b = Math.floor(Math.random() * 9) + 1; // 1-9
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'sub') {
+        let a = Math.floor(Math.random() * 10) + 5; // 5-14
+        let b = Math.floor(Math.random() * 5) + 1;  // 1-5
+        return { q: `${a} - ${b} = ?`, a: (a - b).toString() };
+      } else { // multiplication
+        let a = Math.floor(Math.random() * 5) + 2; // 2-6
+        let b = Math.floor(Math.random() * 5) + 2; // 2-6
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      }
+    }
+    
+    // Medium Questions: Two digit numbers, division, mixed operations
+    function generateMediumQuestion() {
+      const types = ['add', 'sub', 'mul', 'div', 'mixed'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'add') {
+        let a = Math.floor(Math.random() * 50) + 10; // 10-59
+        let b = Math.floor(Math.random() * 30) + 10; // 10-39
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'sub') {
+        let a = Math.floor(Math.random() * 50) + 25; // 25-74
+        let b = Math.floor(Math.random() * 20) + 5;  // 5-24
+        return { q: `${a} - ${b} = ?`, a: (a - b).toString() };
+      } else if (type === 'mul') {
+        let a = Math.floor(Math.random() * 8) + 7;  // 7-14
+        let b = Math.floor(Math.random() * 8) + 3;  // 3-10
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      } else if (type === 'div') {
+        let b = Math.floor(Math.random() * 8) + 3;  // 3-10
+        let result = Math.floor(Math.random() * 12) + 4; // 4-15
+        let a = b * result;
+        return { q: `${a} ÷ ${b} = ?`, a: result.toString() };
+      } else { // mixed operations
+        let a = Math.floor(Math.random() * 10) + 5;  // 5-14
+        let b = Math.floor(Math.random() * 5) + 2;   // 2-6
+        let c = Math.floor(Math.random() * 5) + 1;   // 1-5
+        let result = a + (b * c);
+        return { q: `${a} + ${b} × ${c} = ?`, a: result.toString() };
+      }
+    }
+    
+    // Hard Questions: Large numbers, complex operations, fractions, percentages
+    function generateHardQuestion() {
+      const types = ['large_add', 'large_mul', 'fraction', 'percentage', 'complex', 'square'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      if (type === 'large_add') {
+        let a = Math.floor(Math.random() * 500) + 100; // 100-599
+        let b = Math.floor(Math.random() * 300) + 50;  // 50-349
+        return { q: `${a} + ${b} = ?`, a: (a + b).toString() };
+      } else if (type === 'large_mul') {
+        let a = Math.floor(Math.random() * 20) + 15; // 15-34
+        let b = Math.floor(Math.random() * 15) + 12; // 12-26
+        return { q: `${a} × ${b} = ?`, a: (a * b).toString() };
+      } else if (type === 'fraction') {
+        let whole = Math.floor(Math.random() * 8) + 2;  // 2-9
+        let num = Math.floor(Math.random() * 4) + 1;    // 1-4
+        let den = Math.floor(Math.random() * 4) + 2;    // 2-5
+        let result = (whole * den + num) / den;
+        if (result % 1 === 0) {
+          return { q: `${whole} + ${num}/${den} = ?`, a: Math.floor(result).toString() };
+        } else {
+          return generateHardQuestion(); // Retry if not whole number
+        }
+      } else if (type === 'percentage') {
+        let percent = [10, 20, 25, 50, 75][Math.floor(Math.random() * 5)];
+        let number = Math.floor(Math.random() * 80) + 20; // 20-99
+        let result = Math.floor((number * percent) / 100);
+        return { q: `${percent}% of ${number} = ?`, a: result.toString() };
+      } else if (type === 'complex') {
+        let a = Math.floor(Math.random() * 15) + 10; // 10-24
+        let b = Math.floor(Math.random() * 8) + 3;   // 3-10
+        let c = Math.floor(Math.random() * 6) + 2;   // 2-7
+        let result = (a * b) - c;
+        return { q: `${a} × ${b} - ${c} = ?`, a: result.toString() };
+      } else { // square
+        let base = Math.floor(Math.random() * 8) + 3; // 3-10
+        let result = base * base;
+        return { q: `${base}² = ?`, a: result.toString() };
+      }
+    }
+
+    function goToIntro(){
+      document.getElementById("logo").classList.remove("active");
+      document.getElementById("intro").classList.add("active");
+      startMusic(); // Start music on first user interaction
+    }
+
+    async function chooseDifficulty(){
+      username = document.getElementById("username").value;
+      email = document.getElementById("email").value;
+      if(!username || !email){ alert("Please enter name and email!"); return; }
+      
+      // Show saving message
+      const nextBtn = document.querySelector('#intro button');
+      nextBtn.innerHTML = "Saving...";
+      nextBtn.disabled = true;
+      
+      // Save to Airtable
+      await saveUserToAirtable(username, email);
+      
+      // Continue to next screen
+      nextBtn.innerHTML = "Saved! ✅";
+      setTimeout(() => {
+        document.getElementById("intro").classList.remove("active");
+        document.getElementById("difficulty").classList.add("active");
+      }, 800);
+    }
+
+    function setDifficulty(diff) { 
+      difficulty = diff; 
+      
+      // Update visual feedback
+      document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      document.querySelector(`[data-diff="${diff}"]`).classList.add('selected');
+    }
+
+    function startGame(){
+      numQuestions = parseInt(document.getElementById("qcount-select").value);
+      questions = generateQuestions(difficulty, numQuestions);
+      score = 0; questionIndex = 0; startTime = Date.now();
+      document.getElementById("difficulty").classList.remove("active");
+      document.getElementById("game").classList.add("active");
+      startTimer(); showQuestion();
+    }
+
+    function showQuestion(){
+      if(questionIndex < questions.length){
+        let q = questions[questionIndex];
+        document.getElementById("question").innerText = q.q;
+        document.getElementById("answer").value = "";
+        document.getElementById("feedback").innerText = "";
+        document.getElementById("scoreboard").innerText = `Score: ${score}`;
+        document.getElementById("qcount").innerText = `Q: ${questionIndex+1}/${numQuestions}`;
+      } else completeLevel();
+    }
+
+    function submitAnswer(){
+      let userAns = document.getElementById("answer").value.trim();
+      if(userAns === questions[questionIndex].a){
+        score += 10; questionIndex++; showQuestion();
+      } else {
+        score -= 2;
+      }
+      document.getElementById("scoreboard").innerText = `Score: ${score}`;
+    }
+
+    document.addEventListener("keypress", function(e){
+      if(e.key === "Enter" && document.getElementById("game").classList.contains("active")){
+        submitAnswer();
+      }
+    });
+
+    function completeLevel(){
+      stopTimer();
+      let timeTaken = Math.floor((Date.now()-startTime)/1000);
+      let rank = "Novice";
+      if(score > 80) rank = "Pro";
+      if(score > 120 && timeTaken < 60) rank = "Champion";
+
+      document.getElementById("game").classList.remove("active");
+      document.getElementById("complete").classList.add("active");
+      document.getElementById("complete-title").innerText = `Level ${currentLevel} Complete!`;
+      document.getElementById("rank").innerText = `Your Rank: ${rank} | Score: ${score} | Time: ${timeTaken}s`;
+      document.getElementById("unlock").innerText = `🎉 Next Level Unlocked! 🎉`;
+
+      // Update Leaderboard
+      leaderboard.push({ name: username, sc: score });
+      leaderboard.sort((a,b)=>b.sc-a.sc);
+      let lbHTML = "";
+      leaderboard.forEach((p,i)=>{
+        lbHTML += `<div class="lb-item">#${i+1} ${p.name} — ${p.sc}</div>`;
+      });
+      document.getElementById("lb-list").innerHTML = lbHTML;
+    }
+
+    function nextLevel(){
+      document.getElementById("complete").classList.remove("active");
+      currentLevel++;
+      if(currentLevel > 3){
+        document.getElementById("victory").classList.add("active");
+        return;
+      }
+      questions = generateQuestions(difficulty, numQuestions);
+      score = 0; questionIndex = 0; startTime = Date.now();
+      document.getElementById("game").classList.add("active");
+      document.getElementById("level-title").innerText = `Level ${currentLevel}`;
+      startTimer(); showQuestion();
+    }
+
+    function startTimer(){
+      let timeLeft = 120;
+      document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
+      timerInterval = setInterval(()=>{
+        timeLeft--;
+        document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
+        if(timeLeft<=0){ clearInterval(timerInterval); completeLevel(); }
+      },1000);
+    }
+    function stopTimer(){ clearInterval(timerInterval); }
+
+    // Start background music
+    function startMusic() {
+      if (!bgMusic) {
+        bgMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+        bgMusic.loop = true;
+        bgMusic.volume = 0.4; // Set volume to 40%
+        bgMusic.play().catch(() => {
+          console.log("Autoplay blocked - music will start on next interaction");
+          // Try again on any click
+          document.addEventListener('click', function tryMusic() {
+            bgMusic.play().catch(() => {});
+            document.removeEventListener('click', tryMusic);
+          });
+        });
+      }
+    }
+
+    // Airtable Integration - Clean Production Version
+    async function saveUserToAirtable(name, email) {
+      const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
+      const AIRTABLE_TOKEN = 'pats2JPyuo4rbkXmZ.e480d63cb10be17b860d8c8fed17e5284621047b534f3f2ad0cd3c3ba80a3185';
+      
+      try {
+        // Get table metadata to find the correct table ID
+        const metaUrl = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_APP_ID}/tables`;
+        const metaResponse = await fetch(metaUrl, {
+          headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
+        });
+        
+        if (metaResponse.ok) {
+          const metaData = await metaResponse.json();
+          
+          // Find the correct table (try D1 first, then fallback to first table)
+          let targetTable = metaData.tables.find(t => t.name === 'D1') || metaData.tables[0];
+          
+          const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${targetTable.id}`;
+          const data = {
+            records: [{
+              fields: { Name: name, Email: email }
+            }]
+          };
+          
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+          
+          return response.ok;
+        }
+        
+        return false;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    // Share WhatsApp
+    function shareScore(){
+      let text = `🎮 I scored ${score} in Numerix!\n🏆 My Rank: ${username} (${email})\n\nCan you beat my score? Play Numerix now!`;
+      let url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+      window.open(url, "_blank");
+    }
+  </script>
+</body>
+</html>
