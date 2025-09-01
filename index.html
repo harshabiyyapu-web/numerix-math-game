@@ -14,21 +14,27 @@
     
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0a0a0b;
+      background: #000000;
       color: #ffffff;
       overflow-x: hidden;
       min-height: 100vh;
+      position: relative;
     }
     
-    /* Animated Background */
+    /* Advanced Animated Background */
     .bg-animation {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(45deg, #0a0a0b, #1a1a2e, #16213e);
-      z-index: -2;
+      background: 
+        radial-gradient(circle at 20% 20%, #ff006e 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, #8338ec 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, #3a86ff 0%, transparent 50%),
+        linear-gradient(135deg, #000000 0%, #1a0033 50%, #000000 100%);
+      z-index: -3;
+      animation: bgPulse 8s ease-in-out infinite;
     }
     
     .bg-animation::before {
@@ -38,15 +44,40 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                  radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-      animation: floatBg 20s ease-in-out infinite;
+      background: 
+        conic-gradient(from 0deg at 50% 50%, 
+          rgba(255, 0, 110, 0.1) 0deg,
+          rgba(131, 56, 236, 0.1) 120deg,
+          rgba(58, 134, 255, 0.1) 240deg,
+          rgba(255, 0, 110, 0.1) 360deg);
+      animation: rotate 30s linear infinite;
+      opacity: 0.3;
     }
     
-    @keyframes floatBg {
-      0%, 100% { transform: scale(1) rotate(0deg); }
-      50% { transform: scale(1.1) rotate(180deg); }
+    .bg-animation::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      animation: gridMove 20s linear infinite;
+    }
+    
+    @keyframes bgPulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(10px, 10px); }
     }
     
     /* Screen Management */
@@ -77,21 +108,25 @@
       }
     }
     
-    /* Modern Button Styles */
+    /* Advanced Gaming Button Styles */
     .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+      border: 2px solid transparent;
+      padding: 1.2rem 2.5rem;
+      border-radius: 16px;
       color: white;
-      font-weight: 600;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 1.1rem;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
       overflow: hidden;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      box-shadow: 
+        0 0 20px rgba(255, 0, 110, 0.3),
+        0 0 40px rgba(131, 56, 236, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
     
     .btn::before {
@@ -101,21 +136,43 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.6s ease;
+    }
+    
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: all 0.6s ease;
+      border-radius: 50%;
     }
     
     .btn:hover::before {
       left: 100%;
     }
     
+    .btn:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+    
     .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 
+        0 0 30px rgba(255, 0, 110, 0.6),
+        0 0 60px rgba(131, 56, 236, 0.4),
+        0 20px 40px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.3);
     }
     
     .btn:active {
-      transform: translateY(0);
+      transform: translateY(-2px) scale(1.02);
     }
     
     /* Input Styles */
@@ -143,25 +200,93 @@
       color: rgba(255, 255, 255, 0.6);
     }
     
-    /* Typography */
+    /* Advanced Typography */
     .title {
       font-size: clamp(3rem, 8vw, 6rem);
-      font-weight: 700;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 1rem;
-      animation: glow 2s ease-in-out infinite alternate;
+      animation: titlePulse 3s ease-in-out infinite;
+      text-shadow: 0 0 40px rgba(255, 0, 110, 0.5);
+      position: relative;
     }
     
-    @keyframes glow {
+    .title::before {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: blur(2px);
+      z-index: -1;
+      animation: titleGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    
+    @keyframes titleGlow {
       from {
-        text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        text-shadow: 0 0 20px rgba(255, 0, 110, 0.8);
       }
       to {
-        text-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+        text-shadow: 0 0 40px rgba(131, 56, 236, 0.8);
       }
+    }
+    
+    /* Big Circular Timer */
+    .circular-timer {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 2rem auto;
+    }
+    
+    .timer-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #ff006e 0deg, #8338ec 120deg, #3a86ff 240deg, #ff006e 360deg);
+      padding: 8px;
+      animation: rotate 10s linear infinite;
+    }
+    
+    .timer-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 30px rgba(255, 0, 110, 0.3);
+    }
+    
+    .timer-text {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    
+    .timer-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #ff006e var(--progress), transparent var(--progress));
+      transition: --progress 1s ease;
     }
     
     .subtitle {
@@ -202,41 +327,176 @@
       }
     }
     
-    /* Answer Effects */
+    /* Gaming HUD Elements */
+    .hud-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+      backdrop-filter: blur(10px);
+    }
+    
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .hud-stats {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.8rem 1.2rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.2rem;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    /* XP Bar */
+    .xp-bar-container {
+      width: 100%;
+      max-width: 300px;
+      margin: 1rem auto;
+    }
+    
+    .xp-bar {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+      border-radius: 6px;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+      box-shadow: 0 0 10px rgba(255, 0, 110, 0.6);
+    }
+    
+    .xp-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    /* Combo System */
+    .combo-display {
+      position: fixed;
+      top: 50%;
+      right: 2rem;
+      transform: translateY(-50%);
+      z-index: 200;
+      text-align: center;
+    }
+    
+    .combo-counter {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ff006e;
+      text-shadow: 0 0 20px rgba(255, 0, 110, 0.8);
+      margin-bottom: 0.5rem;
+      animation: comboPulse 0.5s ease-out;
+    }
+    
+    .combo-text {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    @keyframes comboPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Advanced Answer Effects */
     .answer-effect {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 4rem;
-      font-weight: bold;
+      font-size: 5rem;
+      font-weight: 900;
       z-index: 1000;
       pointer-events: none;
-      animation: answerPop 1s ease-out forwards;
+      animation: answerExplode 1.5s ease-out forwards;
     }
     
     .answer-effect.correct {
-      color: #4ade80;
-      text-shadow: 0 0 20px rgba(74, 222, 128, 0.8);
+      color: #00ff88;
+      text-shadow: 
+        0 0 20px rgba(0, 255, 136, 0.8),
+        0 0 40px rgba(0, 255, 136, 0.6),
+        0 0 60px rgba(0, 255, 136, 0.4);
     }
     
     .answer-effect.wrong {
-      color: #f87171;
-      text-shadow: 0 0 20px rgba(248, 113, 113, 0.8);
+      color: #ff0055;
+      text-shadow: 
+        0 0 20px rgba(255, 0, 85, 0.8),
+        0 0 40px rgba(255, 0, 85, 0.6),
+        0 0 60px rgba(255, 0, 85, 0.4);
     }
     
-    @keyframes answerPop {
+    @keyframes answerExplode {
       0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translate(-50%, -50%) scale(0.3) rotate(-10deg);
       }
-      50% {
+      30% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translate(-50%, -50%) scale(1.4) rotate(5deg);
+      }
+      70% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1) rotate(-2deg);
       }
       100% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
       }
     }
     
@@ -284,6 +544,17 @@
       }
     }
     
+    @keyframes questionPulse {
+      0%, 100% { 
+        transform: scale(1); 
+        text-shadow: 0 0 30px rgba(255,255,255,0.8);
+      }
+      50% { 
+        transform: scale(1.02); 
+        text-shadow: 0 0 40px rgba(255,0,110,0.8);
+      }
+    }
+    
     /* Responsive Design */
     @media (max-width: 768px) {
       .screen {
@@ -310,10 +581,15 @@
 
   <!-- Welcome Screen -->
   <div id="welcome" class="screen active">
-    <h1 class="title">NUMERIX</h1>
-    <p class="subtitle">Master the Numbers with Style</p>
+    <h1 class="title" data-text="NUMERIX">NUMERIX</h1>
+    <p class="subtitle">⚡ Ultimate Math Gaming Experience ⚡</p>
+    <div class="xp-bar-container">
+      <div class="xp-bar">
+        <div class="xp-fill" style="width: 0%"></div>
+      </div>
+    </div>
     <button class="btn" onclick="goToIntro()">
-      <span>Start Journey</span>
+      <span>🚀 Enter Arena</span>
     </button>
   </div>
 
@@ -347,9 +623,9 @@
     <div style="margin-bottom: 2rem;">
       <label style="color: rgba(255,255,255,0.8); margin-right: 1rem;">Questions:</label>
       <select id="qcount-select" class="input" style="width: auto; min-width: 100px;">
-        <option value="10">10</option>
-        <option value="15">15</option>
-        <option value="20">20</option>
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
       </select>
     </div>
     
@@ -360,17 +636,53 @@
 
   <!-- Game Screen -->
   <div id="game" class="screen">
-    <div style="position: fixed; top: 2rem; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; z-index: 10;">
-      <div id="timer" style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px; backdrop-filter: blur(10px);"></div>
-      <div id="scoreboard" style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px; backdrop-filter: blur(10px);"></div>
-      <div id="qcount" style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px; backdrop-filter: blur(10px);"></div>
+    <!-- Gaming HUD -->
+    <div class="hud-container">
+      <div class="hud-top">
+        <div class="hud-stats">
+          <div class="stat-item">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="score-display">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Question</div>
+            <div class="stat-value" id="question-counter">1/10</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Level</div>
+            <div class="stat-value" id="level-display">1</div>
+          </div>
+        </div>
+        
+        <!-- Circular Timer -->
+        <div class="circular-timer">
+          <div class="timer-circle">
+            <div class="timer-inner">
+              <div class="timer-text" id="timer-display">120</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- XP Bar -->
+      <div class="xp-bar-container">
+        <div class="xp-bar">
+          <div class="xp-fill" id="xp-progress" style="width: 0%"></div>
+        </div>
+      </div>
     </div>
     
-    <div style="text-align: center; margin-top: 4rem;">
-      <h2 id="level-title" style="font-size: 2rem; margin-bottom: 3rem; color: rgba(255,255,255,0.9);">Level 1</h2>
-      <div id="question" style="font-size: 3.5rem; font-weight: 600; margin-bottom: 3rem; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.5);"></div>
-      <input type="text" id="answer" class="input" placeholder="Type your answer..." style="font-size: 1.5rem; padding: 1.5rem; text-align: center; max-width: 400px;">
-      <div id="feedback" style="margin-top: 1rem; font-size: 1.2rem;"></div>
+    <!-- Combo Display -->
+    <div class="combo-display" id="combo-display" style="display: none;">
+      <div class="combo-counter" id="combo-counter">0</div>
+      <div class="combo-text">Combo</div>
+    </div>
+    
+    <!-- Question Area -->
+    <div style="text-align: center; margin-top: 12rem; padding: 2rem;">
+      <div id="question" style="font-size: 4rem; font-weight: 900; margin-bottom: 3rem; color: white; text-shadow: 0 0 30px rgba(255,255,255,0.8); animation: questionPulse 2s ease-in-out infinite;"></div>
+      <input type="text" id="answer" class="input" placeholder="Enter your answer..." style="font-size: 2rem; padding: 2rem; text-align: center; max-width: 500px; background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.3);">
+      <div id="feedback" style="margin-top: 2rem; font-size: 1.5rem;"></div>
     </div>
   </div>
 
@@ -410,6 +722,11 @@
     let username = "", email = "";
     let leaderboard = [];
     let bgMusic;
+    
+    // Gaming Elements
+    let combo = 0, maxCombo = 0;
+    let xp = 0, maxXP = 1000;
+    let timeLeft = 120;
 
     // Generate Questions with Proper Difficulty Levels
     function generateQuestions(diff, n) {
@@ -562,8 +879,8 @@
       // Continue to next screen
       nextBtn.innerHTML = '<span>Saved! ✅</span>';
       setTimeout(() => {
-        document.getElementById("intro").classList.remove("active");
-        document.getElementById("difficulty").classList.add("active");
+      document.getElementById("intro").classList.remove("active");
+      document.getElementById("difficulty").classList.add("active");
       }, 800);
     }
 
@@ -637,8 +954,14 @@
         document.getElementById("question").innerText = q.q;
         document.getElementById("answer").value = "";
         document.getElementById("feedback").innerText = "";
-        document.getElementById("scoreboard").innerText = `Score: ${score}`;
-        document.getElementById("qcount").innerText = `Q: ${questionIndex+1}/${numQuestions}`;
+        
+        // Update HUD
+        document.getElementById("score-display").innerText = score;
+        document.getElementById("question-counter").innerText = `${questionIndex+1}/${numQuestions}`;
+        document.getElementById("level-display").innerText = currentLevel;
+        
+        // Focus on answer input
+        document.getElementById("answer").focus();
       } else completeLevel();
     }
 
@@ -650,11 +973,24 @@
       showAnswerEffect(isCorrect);
       
       if(isCorrect){
-        score += 10; 
+        // Increase combo and score
+        combo++;
+        let points = 10 + (combo > 1 ? combo * 2 : 0); // Bonus points for combo
+        score += points;
+        xp += points;
+        
+        // Update combo display
+        updateComboDisplay();
+        updateXPBar();
+        
         questionIndex++; 
-        setTimeout(() => showQuestion(), 500); // Small delay for effect
+        setTimeout(() => showQuestion(), 800); // Small delay for effect
       } else {
-        score -= 2;
+        // Reset combo and lose points
+        combo = 0;
+        score = Math.max(0, score - 2);
+        hideComboDisplay();
+        
         // Shake the input field for wrong answer
         const answerInput = document.getElementById("answer");
         answerInput.style.animation = 'shake 0.5s ease-in-out';
@@ -662,7 +998,36 @@
           answerInput.style.animation = '';
         }, 500);
       }
-      document.getElementById("scoreboard").innerText = `Score: ${score}`;
+      
+      // Update max combo
+      if(combo > maxCombo) maxCombo = combo;
+      
+      // Update displays
+      document.getElementById("score-display").innerText = score;
+    }
+    
+    function updateComboDisplay() {
+      const comboDisplay = document.getElementById("combo-display");
+      const comboCounter = document.getElementById("combo-counter");
+      
+      if(combo >= 2) {
+        comboDisplay.style.display = 'block';
+        comboCounter.innerText = combo;
+        comboCounter.style.animation = 'comboPulse 0.5s ease-out';
+        setTimeout(() => {
+          comboCounter.style.animation = '';
+        }, 500);
+      }
+    }
+    
+    function hideComboDisplay() {
+      document.getElementById("combo-display").style.display = 'none';
+    }
+    
+    function updateXPBar() {
+      const xpProgress = document.getElementById("xp-progress");
+      const percentage = Math.min((xp / maxXP) * 100, 100);
+      xpProgress.style.width = percentage + '%';
     }
 
     document.addEventListener("keypress", function(e){
@@ -709,21 +1074,39 @@
     }
 
     function startTimer(){
-      let timeLeft = 120;
-      document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
+      timeLeft = 120;
+      document.getElementById("timer-display").innerText = timeLeft;
+      
       timerInterval = setInterval(()=>{
         timeLeft--;
-        document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
-        if(timeLeft<=0){ clearInterval(timerInterval); completeLevel(); }
-      },1000);
+        document.getElementById("timer-display").innerText = timeLeft;
+        
+        // Change timer color as time runs out
+        const timerDisplay = document.getElementById("timer-display");
+        if(timeLeft <= 10) {
+          timerDisplay.style.color = '#ff0055';
+          timerDisplay.style.animation = 'comboPulse 0.5s ease-in-out infinite';
+        } else if(timeLeft <= 30) {
+          timerDisplay.style.color = '#ffaa00';
+        }
+        
+        if(timeLeft <= 0){ 
+          clearInterval(timerInterval); 
+          completeLevel(); 
+        }
+      }, 1000);
     }
-    function stopTimer(){ clearInterval(timerInterval); }
+    
+    function stopTimer(){ 
+      clearInterval(timerInterval); 
+      document.getElementById("timer-display").style.animation = '';
+    }
 
     // Start background music
     function startMusic() {
       if (!bgMusic) {
         bgMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-        bgMusic.loop = true;
+    bgMusic.loop = true;
         bgMusic.volume = 0.4; // Set volume to 40%
         bgMusic.play().catch(() => {
           console.log("Autoplay blocked - music will start on next interaction");
@@ -789,6 +1172,14 @@
     // Initialize everything when page loads
     window.addEventListener('load', () => {
       initParticles();
+      
+      // Animate welcome XP bar
+      setTimeout(() => {
+        const welcomeXP = document.querySelector('#welcome .xp-fill');
+        if(welcomeXP) {
+          welcomeXP.style.width = '100%';
+        }
+      }, 1000);
     });
   </script>
 </body>
