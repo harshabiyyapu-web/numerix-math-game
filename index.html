@@ -139,6 +139,10 @@
       username = document.getElementById("username").value;
       email = document.getElementById("email").value;
       if(!username || !email){ alert("Please enter name and email!"); return; }
+      
+      // Save to Airtable
+      saveUserToAirtable(username, email);
+      
       document.getElementById("intro").classList.remove("active");
       document.getElementById("difficulty").classList.add("active");
     }
@@ -243,6 +247,43 @@
             document.removeEventListener('click', tryMusic);
           });
         });
+      }
+    }
+
+    // Airtable Integration
+    async function saveUserToAirtable(name, email) {
+      const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
+      const AIRTABLE_TABLE = 'd1';
+      const AIRTABLE_TOKEN = 'pats2JPyuo4rbkXmZ.e480d63cb10be17b860d8c8fed17e5284621047b534f3f2ad0cd3c3ba80a3185';
+      
+      const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${AIRTABLE_TABLE}`;
+      
+      const data = {
+        records: [{
+          fields: {
+            Name: name,
+            Email: email
+          }
+        }]
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          console.log('User data saved to Airtable successfully');
+        } else {
+          console.error('Failed to save to Airtable:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error saving to Airtable:', error);
       }
     }
 
