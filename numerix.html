@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Numerix</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Arial Black', sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, orange, red, blue, pink, yellow);
+      background-size: 500% 500%;
+      animation: gradient 15s ease infinite;
+      color: white;
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .screen { display: none; padding: 40px; }
+    .active { display: block; }
+    h1 { font-size: 3rem; text-shadow: 2px 2px 8px black; }
+    input, button, select {
+      padding: 10px 20px; margin: 10px;
+      font-size: 1.2rem; border-radius: 10px; border: none;
+    }
+    button { background: #ffcc00; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px #fff; }
+    .question { font-size: 2rem; margin: 20px; }
+    #feedback { font-size: 1.5rem; margin: 10px; }
+    #topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 20px; font-size: 1.2rem;
+    }
+    #leaderboard {
+      margin-top: 20px; text-align: left; max-width: 400px; margin-inline:auto;
+      background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
+    }
+    #leaderboard h2 { text-align: center; }
+    .lb-item { margin: 5px 0; }
+    #unlock { font-size: 2rem; color: yellow; margin: 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div id="logo" class="screen active">
+    <h1 style="font-size:5rem; color:#ffcc00; text-shadow:0 0 30px white;">NUMERIX</h1>
+    <p>⚡ Master the Numbers ⚡</p>
+    <button onclick="goToIntro()">Continue</button>
+  </div>
+
+  <!-- Username + Email -->
+  <div id="intro" class="screen">
+    <h1>Enter the Arena</h1>
+    <input type="text" id="username" placeholder="Enter your name"><br>
+    <input type="email" id="email" placeholder="Enter your email"><br>
+    <button onclick="chooseDifficulty()">Next</button>
+  </div>
+
+  <!-- Difficulty -->
+  <div id="difficulty" class="screen">
+    <h1>Select Difficulty</h1>
+    <button onclick="setDifficulty('easy')">Easy</button>
+    <button onclick="setDifficulty('medium')">Medium</button>
+    <button onclick="setDifficulty('hard')">Hard</button><br>
+    <label for="qcount">Questions: </label>
+    <select id="qcount-select">
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+    </select><br>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game" class="screen">
+    <div id="topbar">
+      <div id="timer"></div>
+      <div id="scoreboard"></div>
+      <div id="qcount"></div>
+    </div>
+    <h1 id="level-title">Level 1</h1>
+    <div id="question" class="question"></div>
+    <input type="text" id="answer" placeholder="Your answer">
+    <div id="feedback"></div>
+  </div>
+
+  <!-- Level Complete -->
+  <div id="complete" class="screen">
+    <h1 id="complete-title"></h1>
+    <p id="rank"></p>
+    <div id="unlock"></div>
+    <button onclick="nextLevel()">Next Level</button>
+    <button onclick="shareScore()">Share on WhatsApp</button>
+    <div id="leaderboard">
+      <h2>🏆 Leaderboard</h2>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <!-- Victory -->
+  <div id="victory" class="screen">
+    <h1>🎉 You conquered Numerix! 🎉</h1>
+    <button onclick="shareScore()">Share Final Score</button>
+  </div>
+
+  <script>
+    let currentLevel = 1, score = 0, questionIndex = 0;
+    let startTime, timerInterval, questions = {}, difficulty = "easy", numQuestions = 10;
+    let username = "", email = "";
+    let leaderboard = [];
+
+    // Generate Questions
+    function generateQuestions(diff, n) {
+      let set = [];
+      for (let i = 0; i < n; i++) {
+        let a = Math.floor(Math.random() * 10 + 1);
+        let b = Math.floor(Math.random() * 10 + 1);
+        if (diff === "medium") { a += 5; b += 5; }
+        if (diff === "hard") { a += 10; b += 10; }
+        let type = i % 3;
+        if (type === 0) set.push({ q: `${a} + ${b} = ?`, a: (a+b).toString() });
+        if (type === 1) set.push({ q: `${a} - ${b} = ?`, a: (a-b).toString() });
+        if (type === 2) set.push({ q: `${a} × ${b} = ?`, a: (a*b).toString() });
+      }
+      return set;
+    }
+
+    function goToIntro(){
+      document.getElementById("logo").classList.remove("active");
+      document.getElementById("intro").classList.add("active");
+    }
+
+    function chooseDifficulty(){
+      username = document.getElementById("username").value;
+      email = document.getElementById("email").value;
+      if(!username || !email){ alert("Please enter name and email!"); return; }
+      document.getElementById("intro").classList.remove("active");
+      document.getElementById("difficulty").classList.add("active");
+    }
+
+    function setDifficulty(diff){ difficulty = diff; }
+
+    function startGame(){
+      numQuestions = parseInt(document.getElementById("qcount-select").value);
+      questions = generateQuestions(difficulty, numQuestions);
+      score = 0; questionIndex = 0; startTime = Date.now();
+      document.getElementById("difficulty").classList.remove("active");
+      document.getElementById("game").classList.add("active");
+      startTimer(); showQuestion();
+    }
+
+    function showQuestion(){
+      if(questionIndex < questions.length){
+        let q = questions[questionIndex];
+        document.getElementById("question").innerText = q.q;
+        document.getElementById("answer").value = "";
+        document.getElementById("feedback").innerText = "";
+        document.getElementById("scoreboard").innerText = `Score: ${score}`;
+        document.getElementById("qcount").innerText = `Q: ${questionIndex+1}/${numQuestions}`;
+      } else completeLevel();
+    }
+
+    function submitAnswer(){
+      let userAns = document.getElementById("answer").value.trim();
+      if(userAns === questions[questionIndex].a){
+        score += 10; questionIndex++; showQuestion();
+      } else {
+        score -= 2;
+      }
+      document.getElementById("scoreboard").innerText = `Score: ${score}`;
+    }
+
+    document.addEventListener("keypress", function(e){
+      if(e.key === "Enter" && document.getElementById("game").classList.contains("active")){
+        submitAnswer();
+      }
+    });
+
+    function completeLevel(){
+      stopTimer();
+      let timeTaken = Math.floor((Date.now()-startTime)/1000);
+      let rank = "Novice";
+      if(score > 80) rank = "Pro";
+      if(score > 120 && timeTaken < 60) rank = "Champion";
+
+      document.getElementById("game").classList.remove("active");
+      document.getElementById("complete").classList.add("active");
+      document.getElementById("complete-title").innerText = `Level ${currentLevel} Complete!`;
+      document.getElementById("rank").innerText = `Your Rank: ${rank} | Score: ${score} | Time: ${timeTaken}s`;
+      document.getElementById("unlock").innerText = `🎉 Next Level Unlocked! 🎉`;
+
+      // Update Leaderboard
+      leaderboard.push({ name: username, sc: score });
+      leaderboard.sort((a,b)=>b.sc-a.sc);
+      let lbHTML = "";
+      leaderboard.forEach((p,i)=>{
+        lbHTML += `<div class="lb-item">#${i+1} ${p.name} — ${p.sc}</div>`;
+      });
+      document.getElementById("lb-list").innerHTML = lbHTML;
+    }
+
+    function nextLevel(){
+      document.getElementById("complete").classList.remove("active");
+      currentLevel++;
+      if(currentLevel > 3){
+        document.getElementById("victory").classList.add("active");
+        return;
+      }
+      questions = generateQuestions(difficulty, numQuestions);
+      score = 0; questionIndex = 0; startTime = Date.now();
+      document.getElementById("game").classList.add("active");
+      document.getElementById("level-title").innerText = `Level ${currentLevel}`;
+      startTimer(); showQuestion();
+    }
+
+    function startTimer(){
+      let timeLeft = 120;
+      document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
+      timerInterval = setInterval(()=>{
+        timeLeft--;
+        document.getElementById("timer").innerText = `Time: ${timeLeft}s`;
+        if(timeLeft<=0){ clearInterval(timerInterval); completeLevel(); }
+      },1000);
+    }
+    function stopTimer(){ clearInterval(timerInterval); }
+
+    // Music starts immediately when Numerix opens
+    let bgMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+    bgMusic.loop = true;
+    window.addEventListener("load", ()=>{
+      bgMusic.play().catch(()=>{ console.log("Music blocked until user interacts"); });
+    });
+
+    // Share WhatsApp
+    function shareScore(){
+      let text = `🎮 I scored ${score} in Numerix!\n🏆 My Rank: ${username} (${email})\n\nCan you beat my score? Play Numerix now!`;
+      let url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+      window.open(url, "_blank");
+    }
+  </script>
+</body>
+</html>
