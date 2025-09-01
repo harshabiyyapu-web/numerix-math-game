@@ -28,6 +28,11 @@
     button { background: #ffcc00; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px #fff; }
     .question { font-size: 2rem; margin: 20px; }
     #feedback { font-size: 1.5rem; margin: 10px; }
+    #music-toggle {
+      position: fixed; top: 20px; right: 20px; width: 50px; height: 50px;
+      border-radius: 50%; font-size: 1.5rem; z-index: 1000;
+      background: rgba(255, 204, 0, 0.9); border: none; cursor: pointer;
+    }
     #topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 20px; font-size: 1.2rem;
@@ -42,6 +47,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Music Toggle Button -->
+  <button id="music-toggle" onclick="toggleMusic()" title="Toggle Music">🎵</button>
 
   <!-- Logo -->
   <div id="logo" class="screen active">
@@ -110,6 +118,7 @@
     let startTime, timerInterval, questions = {}, difficulty = "easy", numQuestions = 10;
     let username = "", email = "";
     let leaderboard = [];
+    let bgMusic, musicEnabled = true;
 
     // Generate Questions
     function generateQuestions(diff, n) {
@@ -130,6 +139,7 @@
     function goToIntro(){
       document.getElementById("logo").classList.remove("active");
       document.getElementById("intro").classList.add("active");
+      initMusic(); // Initialize music on first user interaction
     }
 
     function chooseDifficulty(){
@@ -226,12 +236,34 @@
     }
     function stopTimer(){ clearInterval(timerInterval); }
 
-    // Music starts immediately when Numerix opens
-    let bgMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-    bgMusic.loop = true;
-    window.addEventListener("load", ()=>{
-      bgMusic.play().catch(()=>{ console.log("Music blocked until user interacts"); });
-    });
+    // Initialize music system
+    function initMusic() {
+      if (!bgMusic) {
+        bgMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+        bgMusic.loop = true;
+        bgMusic.volume = 0.3; // Set volume to 30%
+        if (musicEnabled) {
+          bgMusic.play().catch(() => console.log("Music initialization failed"));
+        }
+      }
+    }
+
+    function toggleMusic() {
+      if (!bgMusic) {
+        initMusic();
+        return;
+      }
+      
+      if (musicEnabled) {
+        bgMusic.pause();
+        musicEnabled = false;
+        document.getElementById("music-toggle").innerHTML = "🔇";
+      } else {
+        bgMusic.play().catch(() => console.log("Music play failed"));
+        musicEnabled = true;
+        document.getElementById("music-toggle").innerHTML = "🎵";
+      }
+    }
 
     // Share WhatsApp
     function shareScore(){
