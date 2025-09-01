@@ -268,62 +268,85 @@
       }
     }
 
-    // Airtable Integration - With Detailed Error Reporting
+    // Airtable Integration - Permission Testing & Multiple Attempts
     async function saveUserToAirtable(name, email) {
       const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
-      const AIRTABLE_TABLE = 'D1'; // Fixed: uppercase D1
       const AIRTABLE_TOKEN = 'pats2JPyuo4rbkXmZ.e480d63cb10be17b860d8c8fed17e5284621047b534f3f2ad0cd3c3ba80a3185';
       
-      const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${AIRTABLE_TABLE}`;
+      console.log('🚀 AIRTABLE COMPREHENSIVE DEBUG');
       
+      // Step 1: Test if we can read the base metadata
+      console.log('🔍 Step 1: Testing base access...');
+      try {
+        const metaUrl = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_APP_ID}/tables`;
+        const metaResponse = await fetch(metaUrl, {
+          headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
+        });
+        
+        if (metaResponse.ok) {
+          const metaData = await metaResponse.json();
+          console.log('✅ Base metadata accessible:', metaData);
+          alert(`📋 Available Tables:\n${metaData.tables.map(t => `- ${t.name} (ID: ${t.id})`).join('\n')}`);
+          
+          // Try using the actual table IDs from metadata
+          for (let table of metaData.tables) {
+            console.log(`🧪 Trying table: ${table.name} (${table.id})`);
+            const success = await attemptSave(AIRTABLE_APP_ID, table.id, AIRTABLE_TOKEN, name, email, table.name);
+            if (success) return true;
+          }
+        } else {
+          console.error('❌ Cannot access base metadata:', metaResponse.status);
+          alert(`❌ Cannot access base metadata\nStatus: ${metaResponse.status}\nThis suggests token permission issues`);
+        }
+      } catch (metaError) {
+        console.error('💥 Metadata fetch error:', metaError);
+      }
+      
+      // Step 2: Try common table name variations
+      console.log('🔄 Step 2: Trying common table names...');
+      const tableNames = ['D1', 'd1', 'tblD1', 'Table 1', 'Users'];
+      
+      for (let tableName of tableNames) {
+        console.log(`🧪 Attempting table: "${tableName}"`);
+        const success = await attemptSave(AIRTABLE_APP_ID, tableName, AIRTABLE_TOKEN, name, email, tableName);
+        if (success) return true;
+      }
+      
+      alert('❌ All save attempts failed. Please check:\n1. Token has write permissions\n2. Table name is correct\n3. Base ID is correct');
+      return false;
+    }
+    
+    // Helper function to attempt saving with different configurations
+    async function attemptSave(appId, tableId, token, name, email, displayName) {
+      const url = `https://api.airtable.com/v0/${appId}/${encodeURIComponent(tableId)}`;
       const data = {
         records: [{
-          fields: {
-            Name: name,
-            Email: email
-          }
+          fields: { Name: name, Email: email }
         }]
       };
-
-      console.log('🚀 AIRTABLE DEBUG START');
-      console.log('📝 Data to save:', { name, email });
-      console.log('🔗 Full URL:', url);
-      console.log('📦 Request payload:', JSON.stringify(data, null, 2));
-      console.log('🔑 Using token ending in:', AIRTABLE_TOKEN.slice(-10));
-
+      
       try {
-        console.log('⏳ Making fetch request...');
-        
         const response = await fetch(url, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(data)
         });
-
-        console.log('📡 Response received');
-        console.log('📊 Status:', response.status);
-        console.log('📊 Status Text:', response.statusText);
-        console.log('📊 Headers:', Object.fromEntries(response.headers.entries()));
-
+        
         const responseText = await response.text();
-        console.log('📄 Raw response:', responseText);
-
+        console.log(`📊 ${displayName}: ${response.status} - ${responseText}`);
+        
         if (response.ok) {
-          console.log('✅ SUCCESS: Data saved successfully');
-          alert(`✅ SUCCESS!\nData saved to Airtable D1 table\nName: ${name}\nEmail: ${email}`);
+          console.log(`✅ SUCCESS with table: ${displayName}`);
+          alert(`✅ SUCCESS!\nSaved to table: ${displayName}\nData: ${name}, ${email}`);
           return true;
-        } else {
-          console.error('❌ FAILED: HTTP Error');
-          let errorMessage = `Status: ${response.status} ${response.statusText}\nResponse: ${responseText}`;
-          alert(`❌ SAVE FAILED!\n${errorMessage}`);
-          return false;
         }
+        
+        return false;
       } catch (error) {
-        console.error('💥 EXCEPTION:', error);
-        alert(`💥 EXCEPTION OCCURRED!\nError: ${error.message}\nType: ${error.name}`);
+        console.log(`💥 Error with ${displayName}:`, error);
         return false;
       }
     }
