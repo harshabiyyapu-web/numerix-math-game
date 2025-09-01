@@ -268,79 +268,48 @@
       }
     }
 
-    // Airtable Integration with Debug Logs
+    // Airtable Integration - Fixed Configuration
     async function saveUserToAirtable(name, email) {
       const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
+      const AIRTABLE_TABLE = 'D1'; // Fixed: uppercase D1
       const AIRTABLE_TOKEN = 'pats2JPyuo4rbkXmZ.e480d63cb10be17b860d8c8fed17e5284621047b534f3f2ad0cd3c3ba80a3185';
       
-      // First, let's try to list tables to see what's available
-      console.log('🔍 DEBUGGING: First checking what tables exist...');
+      const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${AIRTABLE_TABLE}`;
       
+      const data = {
+        records: [{
+          fields: {
+            Name: name,
+            Email: email
+          }
+        }]
+      };
+
+      console.log('💾 Saving to Airtable:', { name, email });
+
       try {
-        const metaUrl = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_APP_ID}/tables`;
-        const metaResponse = await fetch(metaUrl, {
+        const response = await fetch(url, {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${AIRTABLE_TOKEN}`
-          }
+            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
         });
-        
-        if (metaResponse.ok) {
-          const metaData = await metaResponse.json();
-          console.log('📋 Available tables:', metaData);
-          alert(`📋 DEBUG: Available tables:\n${JSON.stringify(metaData, null, 2)}`);
-        }
-      } catch (metaError) {
-        console.log('⚠️ Could not fetch table metadata:', metaError);
-      }
-      
-      // Try different possible table names and field combinations
-      const possibleConfigs = [
-        { table: 'd1', fields: { Name: name, Email: email } },
-        { table: 'D1', fields: { Name: name, Email: email } },
-        { table: 'tbl1', fields: { Name: name, Email: email } },
-        { table: 'Table 1', fields: { Name: name, Email: email } },
-        { table: 'd1', fields: { name: name, email: email } },
-        { table: 'd1', fields: { 'Name': name, 'Email': email } }
-      ];
-      
-      for (let config of possibleConfigs) {
-        console.log(`🧪 Trying table: "${config.table}" with fields:`, config.fields);
-        
-        const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${encodeURIComponent(config.table)}`;
-        const data = {
-          records: [{
-            fields: config.fields
-          }]
-        };
 
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-          });
-
-          console.log(`📡 Response for "${config.table}":`, response.status, response.statusText);
-          
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log('✅ SUCCESS with config:', config);
-            alert(`✅ SUCCESS!\nTable: ${config.table}\nFields: ${JSON.stringify(config.fields)}`);
-            return true;
-          } else {
-            const errorData = await response.text();
-            console.log(`❌ Failed for "${config.table}":`, errorData);
-          }
-        } catch (error) {
-          console.log(`💥 Error for "${config.table}":`, error);
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log('✅ Successfully saved to Airtable:', responseData);
+          return true;
+        } else {
+          const errorData = await response.text();
+          console.error('❌ Airtable save failed:', response.status, errorData);
+          return false;
         }
+      } catch (error) {
+        console.error('💥 Airtable error:', error);
+        return false;
       }
-      
-      alert('❌ All configurations failed. Please check your Airtable setup.');
-      return false;
     }
 
     // Share WhatsApp
