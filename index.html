@@ -271,59 +271,76 @@
     // Airtable Integration with Debug Logs
     async function saveUserToAirtable(name, email) {
       const AIRTABLE_APP_ID = 'appUNb4YI4nnx2eIX';
-      const AIRTABLE_TABLE = 'd1';
       const AIRTABLE_TOKEN = 'pats2JPyuo4rbkXmZ.e480d63cb10be17b860d8c8fed17e5284621047b534f3f2ad0cd3c3ba80a3185';
       
-      const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${AIRTABLE_TABLE}`;
+      // First, let's try to list tables to see what's available
+      console.log('🔍 DEBUGGING: First checking what tables exist...');
       
-      const data = {
-        records: [{
-          fields: {
-            Name: name,
-            Email: email
-          }
-        }]
-      };
-
-      console.log('🚀 AIRTABLE DEBUG: Starting save process');
-      console.log('📝 Data to save:', { name, email });
-      console.log('🔗 URL:', url);
-      console.log('📦 Payload:', JSON.stringify(data, null, 2));
-
       try {
-        console.log('⏳ Making API request...');
-        
-        const response = await fetch(url, {
-          method: 'POST',
+        const metaUrl = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_APP_ID}/tables`;
+        const metaResponse = await fetch(metaUrl, {
           headers: {
-            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
+            'Authorization': `Bearer ${AIRTABLE_TOKEN}`
+          }
         });
-
-        console.log('📡 Response status:', response.status);
-        console.log('📡 Response status text:', response.statusText);
-
-        const responseData = await response.text();
-        console.log('📄 Response body:', responseData);
-
-        if (response.ok) {
-          console.log('✅ SUCCESS: User data saved to Airtable successfully');
-          alert(`✅ DEBUG: Data saved successfully!\nName: ${name}\nEmail: ${email}`);
-          return true;
-        } else {
-          console.error('❌ FAILED: Save to Airtable failed');
-          console.error('Status:', response.status);
-          console.error('Response:', responseData);
-          alert(`❌ DEBUG: Save failed!\nStatus: ${response.status}\nError: ${responseData}`);
-          return false;
+        
+        if (metaResponse.ok) {
+          const metaData = await metaResponse.json();
+          console.log('📋 Available tables:', metaData);
+          alert(`📋 DEBUG: Available tables:\n${JSON.stringify(metaData, null, 2)}`);
         }
-      } catch (error) {
-        console.error('💥 ERROR: Exception during save:', error);
-        alert(`💥 DEBUG: Exception occurred!\nError: ${error.message}`);
-        return false;
+      } catch (metaError) {
+        console.log('⚠️ Could not fetch table metadata:', metaError);
       }
+      
+      // Try different possible table names and field combinations
+      const possibleConfigs = [
+        { table: 'd1', fields: { Name: name, Email: email } },
+        { table: 'D1', fields: { Name: name, Email: email } },
+        { table: 'tbl1', fields: { Name: name, Email: email } },
+        { table: 'Table 1', fields: { Name: name, Email: email } },
+        { table: 'd1', fields: { name: name, email: email } },
+        { table: 'd1', fields: { 'Name': name, 'Email': email } }
+      ];
+      
+      for (let config of possibleConfigs) {
+        console.log(`🧪 Trying table: "${config.table}" with fields:`, config.fields);
+        
+        const url = `https://api.airtable.com/v0/${AIRTABLE_APP_ID}/${encodeURIComponent(config.table)}`;
+        const data = {
+          records: [{
+            fields: config.fields
+          }]
+        };
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+          console.log(`📡 Response for "${config.table}":`, response.status, response.statusText);
+          
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log('✅ SUCCESS with config:', config);
+            alert(`✅ SUCCESS!\nTable: ${config.table}\nFields: ${JSON.stringify(config.fields)}`);
+            return true;
+          } else {
+            const errorData = await response.text();
+            console.log(`❌ Failed for "${config.table}":`, errorData);
+          }
+        } catch (error) {
+          console.log(`💥 Error for "${config.table}":`, error);
+        }
+      }
+      
+      alert('❌ All configurations failed. Please check your Airtable setup.');
+      return false;
     }
 
     // Share WhatsApp
